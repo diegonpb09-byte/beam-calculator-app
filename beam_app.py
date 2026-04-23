@@ -67,27 +67,70 @@ st.info("""
 
 # --- BEAM DIAGRAM FUNCTION ---
 def draw_beam_diagram(beam_type, load_type, L, load, a=None):
-    fig, ax = plt.subplots(figsize=(10,2))
+    fig, ax = plt.subplots(figsize=(10,3))
 
+    # --- Beam line ---
     ax.plot([0, L], [0, 0], linewidth=6)
 
+    # --- SUPPORTS + REACTIONS ---
     if beam_type == "Simply Supported Beam":
+        # Supports
         ax.plot(0, 0, marker="^", markersize=12)
-        ax.plot(L, 0, marker="o", markersize=10)
-    else:
-        ax.plot(0, 0, marker="s", markersize=12)
+        ax.text(0, -0.5, "Pin", ha='center')
 
+        ax.plot(L, 0, marker="o", markersize=10)
+        ax.text(L, -0.5, "Roller", ha='center')
+
+        # Reactions
+        if load_type == "Point Load":
+            R1 = load * (L - a) / L
+            R2 = load * a / L
+        else:  # UDL
+            R1 = R2 = load * L / 2
+
+        # Reaction arrows
+        ax.arrow(0, -0.2, 0, 0.8, head_width=0.2, head_length=0.2, color='green')
+        ax.text(0, 0.9, f"R₁ = {R1:.0f} N", ha='center', color='green')
+
+        ax.arrow(L, -0.2, 0, 0.8, head_width=0.2, head_length=0.2, color='green')
+        ax.text(L, 0.9, f"R₂ = {R2:.0f} N", ha='center', color='green')
+
+    else:  # Cantilever
+        ax.plot(0, 0, marker="s", markersize=12)
+        ax.text(0, -0.5, "Fixed Support", ha='center')
+
+        # Reaction force at wall
+        if load_type == "Point Load":
+            R = load
+        else:
+            R = load * L
+
+        ax.arrow(0, -0.2, 0, 0.8, head_width=0.2, head_length=0.2, color='green')
+        ax.text(0, 0.9, f"R = {R:.0f} N", ha='center', color='green')
+
+    # --- LOADS ---
     if load_type == "Point Load":
-        ax.arrow(a, 1, 0, -1, head_width=0.2, head_length=0.3)
-        ax.text(a, 1.2, "P", ha='center')
+        ax.arrow(a, 1.2, 0, -1, head_width=0.2, head_length=0.3)
+        ax.text(a, 1.5, f"P = {load:.0f} N", ha='center')
+
     else:
         for i in np.linspace(0, L, 12):
-            ax.arrow(i, 1, 0, -1, head_width=0.15, head_length=0.2)
-        ax.text(L/2, 1.2, "w", ha='center')
+            ax.arrow(i, 1.2, 0, -1, head_width=0.15, head_length=0.2)
+        ax.text(L/2, 1.5, f"w = {load:.0f} N/m", ha='center')
 
+    # --- LENGTH DIMENSION ---
+    ax.annotate(
+        "",
+        xy=(0, -1.2),
+        xytext=(L, -1.2),
+        arrowprops=dict(arrowstyle="<->")
+    )
+    ax.text(L/2, -1.5, f"L = {L:.2f} m", ha='center')
+
+    # --- FORMATTING ---
     ax.set_xlim(-1, L+1)
-    ax.set_ylim(-1, 2)
-    ax.set_title("Beam Diagram")
+    ax.set_ylim(-2, 2)
+    ax.set_title("Beam Free Body Diagram", pad=15)
     ax.axis('off')
 
     return fig
