@@ -181,7 +181,7 @@ ax[1].annotate(
     ha='left',
     bbox=dict(boxstyle="round,pad=0.3")
 )
-ax[1].set_title("Bending Moment Diagram")
+ax[1].set_title("Bending Moment Diagram", pad=15)
 ax[1].set_xlabel("Position (m)")
 ax[1].set_ylabel("Moment (N·m)")
 ax[1].grid()
