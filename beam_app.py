@@ -155,13 +155,19 @@ fig, ax = plt.subplots(2, 1, figsize=(10, 8))
 # SHEAR
 ax[0].plot(x, V)
 ax[0].scatter(x[max_shear_index], V[max_shear_index])
+
+# Dynamic offset
+y_offset_shear = -30 if V[max_shear_index] > 0 else 30
+
 ax[0].annotate(
     f"Max = {max_shear:.2f} N",
     (x[max_shear_index], V[max_shear_index]),
     textcoords="offset points",
-    xytext=(10,10)
+    xytext=(10, y_offset_shear),
+    ha='left',
+    bbox=dict(boxstyle="round,pad=0.3")
 )
-ax[0].set_title("Shear Force Diagram")
+ax[0].set_title("Shear Force Diagram", pad=15)
 ax[0].set_xlabel("Position (m)")
 ax[0].set_ylabel("Shear (N)")
 ax[0].grid()
