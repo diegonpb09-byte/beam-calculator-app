@@ -169,11 +169,17 @@ ax[0].grid()
 # MOMENT
 ax[1].plot(x, M)
 ax[1].scatter(x[max_moment_index], M[max_moment_index])
+
+# Dynamic offset to avoid overlap with title
+y_offset = -30 if M[max_moment_index] > 0 else 30
+
 ax[1].annotate(
     f"Max = {max_moment:.2f} N·m",
     (x[max_moment_index], M[max_moment_index]),
     textcoords="offset points",
-    xytext=(10,10)
+    xytext=(10, y_offset),
+    ha='left',
+    bbox=dict(boxstyle="round,pad=0.3")
 )
 ax[1].set_title("Bending Moment Diagram")
 ax[1].set_xlabel("Position (m)")
