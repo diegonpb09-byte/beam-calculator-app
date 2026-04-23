@@ -55,18 +55,45 @@ if load_type == "Point Load":
 else:
     w = st.sidebar.number_input("Uniform Load w (N/m)", min_value=1.0, value=500.0)
 
-# --- DESCRIPTION SECTION ---
+# --- VARIABLE EXPLANATION ---
 st.markdown("### 📘 Variable Definitions")
 st.info("""
 - **L (Length):** Total length of the beam  
-- **E (Modulus of Elasticity):** Measures how stiff the material is  
-- **I (Moment of Inertia):** Describes how the beam's cross-section resists bending  
-- **P (Point Load):** Concentrated force applied at one location  
-- **w (Distributed Load):** Force spread evenly across the beam  
+- **E (Modulus of Elasticity):** Measures material stiffness  
+- **I (Moment of Inertia):** Resistance of the cross-section to bending  
+- **P (Point Load):** Concentrated force applied at one point  
+- **w (Distributed Load):** Load spread evenly along the beam  
 """)
 
+# --- BEAM DIAGRAM FUNCTION ---
+def draw_beam_diagram(beam_type, load_type, L, load, a=None):
+    fig, ax = plt.subplots(figsize=(10,2))
+
+    ax.plot([0, L], [0, 0], linewidth=6)
+
+    if beam_type == "Simply Supported Beam":
+        ax.plot(0, 0, marker="^", markersize=12)
+        ax.plot(L, 0, marker="o", markersize=10)
+    else:
+        ax.plot(0, 0, marker="s", markersize=12)
+
+    if load_type == "Point Load":
+        ax.arrow(a, 1, 0, -1, head_width=0.2, head_length=0.3)
+        ax.text(a, 1.2, "P", ha='center')
+    else:
+        for i in np.linspace(0, L, 12):
+            ax.arrow(i, 1, 0, -1, head_width=0.15, head_length=0.2)
+        ax.text(L/2, 1.2, "w", ha='center')
+
+    ax.set_xlim(-1, L+1)
+    ax.set_ylim(-1, 2)
+    ax.set_title("Beam Diagram")
+    ax.axis('off')
+
+    return fig
+
 # --- CALCULATIONS ---
-x = np.linspace(0, L, 200)
+x = np.linspace(0, L, 500)
 
 if beam_type == "Simply Supported Beam" and load_type == "Point Load":
     R1 = P * (L - a) / L
@@ -89,38 +116,73 @@ elif beam_type == "Cantilever Beam" and load_type == "Uniformly Distributed Load
     M = (w/2) * (L - x)**2
     delta_max = (w * L**4) / (8 * E * I)
 
+# --- FIND MAX VALUES ---
+max_shear = np.max(np.abs(V))
+max_shear_index = np.argmax(np.abs(V))
+
+max_moment = np.max(np.abs(M))
+max_moment_index = np.argmax(np.abs(M))
+
 # --- RESULTS ---
 st.markdown("## 📊 Results")
 
-col1, col2 = st.columns(2)
+col1, col2, col3 = st.columns(3)
 
 with col1:
-    st.metric("Maximum Deflection (meters)", f"{delta_max:.6e}")
+    st.metric("Max Deflection (m)", f"{delta_max:.3e}")
 
 with col2:
-    st.metric("Beam Length (meters)", f"{L:.2f}")
+    st.metric("Max Shear (N)", f"{max_shear:.2f}")
+
+with col3:
+    st.metric("Max Moment (N·m)", f"{max_moment:.2f}")
+
+# --- BEAM DIAGRAM ---
+st.markdown("## 🏗️ Beam Diagram")
+
+if load_type == "Point Load":
+    fig_beam = draw_beam_diagram(beam_type, load_type, L, P, a)
+else:
+    fig_beam = draw_beam_diagram(beam_type, load_type, L, w)
+
+st.pyplot(fig_beam)
 
 # --- PLOTS ---
-st.markdown("## 📈 Diagrams")
+st.markdown("## 📈 Shear Force & Bending Moment Diagrams")
 
-fig, ax = plt.subplots(2, 1, figsize=(8, 6))
+fig, ax = plt.subplots(2, 1, figsize=(10, 8))
 
-# Shear
+# SHEAR
 ax[0].plot(x, V)
+ax[0].scatter(x[max_shear_index], V[max_shear_index])
+ax[0].annotate(
+    f"Max = {max_shear:.2f} N",
+    (x[max_shear_index], V[max_shear_index]),
+    textcoords="offset points",
+    xytext=(10,10)
+)
 ax[0].set_title("Shear Force Diagram")
-ax[0].set_xlabel("Position along beam (m)")
-ax[0].set_ylabel("Shear Force (N)")
+ax[0].set_xlabel("Position (m)")
+ax[0].set_ylabel("Shear (N)")
 ax[0].grid()
 
-# Moment
+# MOMENT
 ax[1].plot(x, M)
+ax[1].scatter(x[max_moment_index], M[max_moment_index])
+ax[1].annotate(
+    f"Max = {max_moment:.2f} N·m",
+    (x[max_moment_index], M[max_moment_index]),
+    textcoords="offset points",
+    xytext=(10,10)
+)
 ax[1].set_title("Bending Moment Diagram")
-ax[1].set_xlabel("Position along beam (m)")
+ax[1].set_xlabel("Position (m)")
 ax[1].set_ylabel("Moment (N·m)")
 ax[1].grid()
 
+plt.tight_layout(pad=3.0)
 st.pyplot(fig)
 
 # --- FOOTER ---
 st.markdown("---")
-st.caption("Developed for CE Engineering Analysis | Beam Calculator Tool")
+st.caption("Developed for Civil Engineering Beam Analysis | Streamlit App")
