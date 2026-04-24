@@ -13,6 +13,7 @@ st.markdown("""
     padding:10px;
     border-radius:10px;
     margin-bottom:15px;
+    color:black;
 ">
 <b>Developed by:</b> Diego Pulido<br>
 <b>Course:</b> CE2070.02<br>
