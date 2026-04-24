@@ -7,6 +7,18 @@ st.set_page_config(page_title="Beam Analysis App", layout="wide")
 
 # --- TITLE ---
 st.title("🏗️ Beam Analysis Calculator")
+st.markdown("""
+<div style="
+    background-color:#f0f2f6;
+    padding:10px;
+    border-radius:10px;
+    margin-bottom:15px;
+">
+<b>Developed by:</b> Diego Pulido<br>
+<b>Course:</b> CE2070.02<br>
+<b>Assignment:</b> Final Project
+</div>
+""", unsafe_allow_html=True)
 st.markdown("Analyze beam behavior including **shear force**, **bending moment**, and **deflection**.")
 
 # --- SIDEBAR INPUTS ---
