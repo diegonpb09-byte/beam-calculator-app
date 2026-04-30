@@ -1,12 +1,20 @@
+#---Import Libraries---
+# Streamlit -> creates the web app interface
+# numpy -> handles numerical calculations
+# matplotlib -> creates plots/graphs
 import streamlit as st
 import numpy as np
 import matplotlib.pyplot as plt
 
 # --- PAGE CONFIG ---
+# Sets browser tab title and layout style
 st.set_page_config(page_title="Beam Analysis App", layout="wide")
 
 # --- TITLE ---
+# Main title displayed at the top of the app
 st.title("🏗️ Beam Analysis Calculator")
+
+#Custom header box (HTML, styling inside Streamlit)
 st.markdown("""
 <div style="
     background-color:#f0f2f6;
@@ -23,8 +31,10 @@ st.markdown("""
 st.markdown("Analyze beam behavior including **shear force**, **bending moment**, and **deflection**.")
 
 # --- SIDEBAR INPUTS ---
+# Sidebar collects all user inputs (Interactive UI elements)
 st.sidebar.header("Input Parameters")
 
+# Dropdown selection (conditional input control)
 beam_type = st.sidebar.selectbox(
     "Beam Type",
     ["Simply Supported Beam", "Cantilever Beam"]
@@ -35,14 +45,18 @@ load_type = st.sidebar.selectbox(
     ["Point Load", "Uniformly Distributed Load (UDL)"]
 )
 
+#---Geometry Input---
 st.sidebar.markdown("---")
 st.sidebar.subheader("Geometry")
 
+# number_input -> user enters numerical value
 L = st.sidebar.number_input("Beam Length L (meters)", min_value=0.1, value=5.0)
 
+#---Material Properties---
 st.sidebar.markdown("---")
 st.sidebar.subheader("Material Properties")
 
+# E = modulus of elasticity (material stiffness)
 E = st.sidebar.number_input(
     "Modulus of Elasticity E (Pa)",
     min_value=1.0,
@@ -51,6 +65,7 @@ E = st.sidebar.number_input(
     help="Material stiffness (e.g., Steel ≈ 200 GPa)"
 )
 
+# I = moment of inertia (resistance to bending)
 I = st.sidebar.number_input(
     "Moment of Inertia I (m⁴)",
     min_value=1e-9,
@@ -59,9 +74,11 @@ I = st.sidebar.number_input(
     help="Cross-sectional resistance to bending"
 )
 
+#---Loading Input---
 st.sidebar.markdown("---")
 st.sidebar.subheader("Loading")
 
+# IF-Statement:
 if load_type == "Point Load":
     P = st.sidebar.number_input("Point Load P (Newtons)", min_value=1.0, value=1000.0)
     a = st.sidebar.number_input("Load Position a (meters from left)", min_value=0.0, max_value=L, value=L/2)
@@ -79,6 +96,8 @@ st.info("""
 """)
 
 # --- BEAM DIAGRAM FUNCTION ---
+# Function Definition -> reusable block of code
+# Draws beam, supports, loads, and reactions
 def draw_beam_diagram(beam_type, load_type, L, load, a=None):
     fig, ax = plt.subplots(figsize=(10,3))
 
@@ -94,7 +113,7 @@ def draw_beam_diagram(beam_type, load_type, L, load, a=None):
         ax.plot(L, 0, marker="o", markersize=10)
         ax.text(L, -0.5, "Roller", ha='center')
 
-        # Reactions
+        # Reaction calculations (static equillibrium)
         if load_type == "Point Load":
             R1 = load * (L - a) / L
             R2 = load * a / L
@@ -149,10 +168,12 @@ def draw_beam_diagram(beam_type, load_type, L, load, a=None):
     return fig
 
 # --- CALCULATIONS ---
+# IF-ELIF chain selects correct beam equations
 x = np.linspace(0, L, 500)
 
 if beam_type == "Simply Supported Beam" and load_type == "Point Load":
     R1 = P * (L - a) / L
+    # Vectorized calculations (applies equation across all x)
     V = np.where(x < a, R1, R1 - P)
     M = np.where(x < a, R1 * x, R1 * x - P * (x - a))
     delta_max = (P * a * (L**2 - a**2)**1.5) / (9 * np.sqrt(3) * E * I * L)
@@ -173,6 +194,8 @@ elif beam_type == "Cantilever Beam" and load_type == "Uniformly Distributed Load
     delta_max = (w * L**4) / (8 * E * I)
 
 # --- FIND MAX VALUES ---
+# np.max -> finds largest magnitude
+# np.argmax -> finds index location
 max_shear = np.max(np.abs(V))
 max_shear_index = np.argmax(np.abs(V))
 
