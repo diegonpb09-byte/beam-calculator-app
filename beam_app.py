@@ -196,32 +196,37 @@ for load in loads:
                      head_width=0.15, head_length=0.15, length_includes_head=True)
         ax.text((a+b)/2, 1.7, f"w={w:.0f}", ha='center')
 
-# --- MOMENT (CENTERED ON BEAM) ---
+# --- MOMENT (ON BEAM, LABEL BELOW) ---
 if moment_value != 0:
     theta = np.linspace(0, np.pi, 50)
 
-    r = 0.5
-    y_center = 0.0  # <-- THIS anchors it to the beam
+    r = 0.45
+    y_center = -0.05   # slight shift BELOW beam so it visually sits on it
 
-    # Draw arc just above beam
+    # Draw arc
     ax.plot(
         moment_pos + r * np.cos(theta),
         y_center + r * np.sin(theta),
         linewidth=2
     )
 
-    # Add arrow head manually (end of arc)
+    # Arrow head at end of arc
     ax.arrow(
         moment_pos + r*np.cos(theta[-2]),
         y_center + r*np.sin(theta[-2]),
         0.001, 0.001,
-        head_width=0.15,
-        head_length=0.15,
+        head_width=0.12,
+        head_length=0.12,
         length_includes_head=True
     )
 
-    # Label slightly above arc
-    ax.text(moment_pos, y_center + r + 0.4, f"M={moment_value:.0f}", ha='center')
+    # Label BELOW the beam
+    ax.text(
+        moment_pos,
+        y_center - 0.5,
+        f"M = {moment_value:.0f} N·m",
+        ha='center'
+    )
 
 # --- FORMATTING ---
 ax.set_xlim(-0.5, L + 0.5)
