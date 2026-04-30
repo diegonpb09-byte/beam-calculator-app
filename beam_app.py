@@ -157,11 +157,11 @@ col2.metric("Max Moment (N·m)", f"{np.max(np.abs(M)):.2f}")
 col3.metric("Max Deflection (m)", f"{np.max(np.abs(deflection)):.6e}")
 
 # ==============================
-# POLISHED FBD
+# POLISHED FBD (FIXED)
 # ==============================
 fig_fbd, ax = plt.subplots(figsize=(10,3))
 
-# Beam
+# Beam line
 ax.plot([0, L], [0, 0], linewidth=6)
 
 # Supports
@@ -171,34 +171,49 @@ if beam_type == "Simply Supported":
 else:
     ax.plot(0, 0, marker="s", markersize=12)
 
-# Reactions
-ax.arrow(0, -0.2, 0, 1.2)
-ax.text(0, 1.5, f"R1={R1:.0f}", ha='center')
+# --- REACTIONS ---
+ax.arrow(0, -0.1, 0, 0.8,
+         head_width=0.2, head_length=0.2, length_includes_head=True)
+ax.text(0, 1.0, f"R1={R1:.0f}", ha='center')
 
 if beam_type == "Simply Supported":
-    ax.arrow(L, -0.2, 0, 1.2)
-    ax.text(L, 1.5, f"R2={R2:.0f}", ha='center')
+    ax.arrow(L, -0.1, 0, 0.8,
+             head_width=0.2, head_length=0.2, length_includes_head=True)
+    ax.text(L, 1.0, f"R2={R2:.0f}", ha='center')
 
-# Loads (OFFSET ABOVE BEAM)
+# --- LOADS (OFFSET ABOVE BEAM, CLEAN) ---
 for load in loads:
     if load[0] == "point":
         _, P, a = load
-        ax.arrow(a, 2.0, 0, -1.6)
-        ax.text(a, 2.2, f"P={P:.0f}", ha='center')
+        ax.arrow(a, 1.5, 0, -1.0,
+                 head_width=0.2, head_length=0.2, length_includes_head=True)
+        ax.text(a, 1.7, f"P={P:.0f}", ha='center')
+
     else:
         _, w, a, b = load
-        for xi in np.linspace(a, b, 10):
-            ax.arrow(xi, 2.0, 0, -1.6)
-        ax.text((a+b)/2, 2.2, f"w={w:.0f}", ha='center')
+        for xi in np.linspace(a, b, 8):
+            ax.arrow(xi, 1.5, 0, -1.0,
+                     head_width=0.15, head_length=0.15, length_includes_head=True)
+        ax.text((a+b)/2, 1.7, f"w={w:.0f}", ha='center')
 
-# External moment
-theta = np.linspace(0, np.pi, 50)
-r = 0.5
-ax.plot(moment_pos + r*np.cos(theta), 1.2 + r*np.sin(theta))
-ax.text(moment_pos, 2.0, f"M={moment_value:.0f}", ha='center')
+# --- MOMENT (FIXED HEIGHT + CLEAN ARC) ---
+if moment_value != 0:
+    theta = np.linspace(0, np.pi, 50)
+    r = 0.4
+    y_center = 0.8  # keeps it close to beam
 
-ax.set_xlim(-1, L+1)
-ax.set_ylim(-1, 3)
+    ax.plot(
+        moment_pos + r*np.cos(theta),
+        y_center + r*np.sin(theta),
+        linewidth=2
+    )
+
+    ax.text(moment_pos, y_center + 0.6, f"M={moment_value:.0f}", ha='center')
+
+# --- FORMATTING ---
+ax.set_xlim(-0.5, L + 0.5)
+ax.set_ylim(-1.0, 2.0)   # THIS fixes scaling issues
+ax.set_title("Free Body Diagram", pad=10)
 ax.axis('off')
 
 st.pyplot(fig_fbd)
