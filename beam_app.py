@@ -10,6 +10,23 @@ st.set_page_config(page_title="Beam Analysis Tool", layout="wide")
 st.title("🏗️ Beam Analysis Tool")
 
 st.markdown("""
+<style>
+.block-container {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+}
+</style>
+""", unsafe_allow_html=True)
+
+st.markdown("""
+<h2 style='margin-bottom:0;'>Beam Analysis Tool</h2>
+<p style='margin-top:0; font-size:14px; opacity:0.7;'>
+Interactive structural analysis for beams
+</p>
+<hr>
+""", unsafe_allow_html=True)
+
+st.markdown("""
 <div style="
     padding:10px;
     border-radius:10px;
@@ -26,6 +43,8 @@ st.markdown("""
 # ==============================
 # SIDEBAR INPUTS
 # ==============================
+st.markdown("## 🔧 Inputs")
+st.markdown("Define beam geometry, material properties, and loading conditions.")
 st.sidebar.header("🔧 Beam Settings")
 
 beam_type = st.sidebar.selectbox(
@@ -154,6 +173,7 @@ else:
 # RESULTS
 # ==============================
 st.markdown("## 📊 Results")
+st.markdown("Key response values for the selected beam configuration.")
 
 col1, col2, col3 = st.columns(3)
 
@@ -164,6 +184,9 @@ col3.metric("Max Deflection (m)", f"{np.max(np.abs(deflection)):.6e}")
 # ==============================
 # POLISHED FBD (FIXED)
 # ==============================
+st.markdown("## 🏗️ Free Body Diagram")
+st.markdown("Visual representation of supports, loads, and reactions.")
+
 fig_fbd, ax = plt.subplots(figsize=(10,3))
 
 # Beam line
@@ -319,6 +342,8 @@ ax[2].set_xlabel("Position (m)")
 ax[2].set_ylabel("Deflection (m)")
 ax[2].grid()
 
+st.markdown("---")
+st.caption("© 2026 Diego Pulido | CE2070 Beam Analysis Tool")
 
 plt.tight_layout(pad=3.0)
 st.pyplot(fig)
