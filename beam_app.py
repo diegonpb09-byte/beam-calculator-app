@@ -10,8 +10,13 @@ st.set_page_config(page_title="Beam Analysis Tool", layout="wide")
 st.title("🏗️ Beam Analysis Tool")
 
 st.markdown("""
-<div style="background-color:rgba(240,242,246,0.8);
-padding:10px;border-radius:10px;margin-bottom:15px;">
+<div style="
+    padding:10px;
+    border-radius:10px;
+    margin-bottom:15px;
+    border: 1px solid rgba(150,150,150,0.3);
+    background-color: transparent;
+">
 <b>Developed by:</b> Diego Pulido<br>
 <b>Course:</b> CE2070.02<br>
 <b>Assignment:</b> Final Project
