@@ -1,279 +1,286 @@
-#---Import Libraries---
-# Streamlit -> creates the web app interface
-# numpy -> handles numerical calculations
-# matplotlib -> creates plots/graphs
 import streamlit as st
 import numpy as np
 import matplotlib.pyplot as plt
 
-# --- PAGE CONFIG ---
-# Sets browser tab title and layout style
-st.set_page_config(page_title="Beam Analysis App", layout="wide")
+# ==============================
+# PAGE SETUP
+# ==============================
+st.set_page_config(page_title="Beam Analysis Tool", layout="wide")
 
-# --- TITLE ---
-# Main title displayed at the top of the app
-st.title("🏗️ Beam Analysis Calculator")
+st.title("🏗️ Beam Analysis Tool")
 
-#Custom header box (HTML, styling inside Streamlit)
 st.markdown("""
-<div style="
-    background-color:#f0f2f6;
-    padding:10px;
-    border-radius:10px;
-    margin-bottom:15px;
-    color:black;
-">
+<div style="background-color:rgba(240,242,246,0.8);
+padding:10px;border-radius:10px;margin-bottom:15px;">
 <b>Developed by:</b> Diego Pulido<br>
 <b>Course:</b> CE2070.02<br>
 <b>Assignment:</b> Final Project
 </div>
 """, unsafe_allow_html=True)
-st.markdown("Analyze beam behavior including **shear force**, **bending moment**, and **deflection**.")
 
-# --- SIDEBAR INPUTS ---
-# Sidebar collects all user inputs (Interactive UI elements)
-st.sidebar.header("Input Parameters")
+# ==============================
+# SIDEBAR INPUTS
+# ==============================
+st.sidebar.header("🔧 Beam Settings")
 
-# Dropdown selection (conditional input control)
 beam_type = st.sidebar.selectbox(
     "Beam Type",
-    ["Simply Supported Beam", "Cantilever Beam"]
+    ["Simply Supported", "Cantilever"]
 )
 
-load_type = st.sidebar.selectbox(
-    "Load Type",
-    ["Point Load", "Uniformly Distributed Load (UDL)"]
-)
+L = st.sidebar.number_input("Beam Length (m)", 1.0, 100.0, 10.0)
+E = st.sidebar.number_input("Elastic Modulus E (Pa)", value=200e9, format="%.2e")
+I = st.sidebar.number_input("Moment of Inertia I (m⁴)", value=1e-6, format="%.2e")
 
-#---Geometry Input---
-st.sidebar.markdown("---")
-st.sidebar.subheader("Geometry")
+# ==============================
+# LOADS
+# ==============================
+st.sidebar.header("📦 Loads")
 
-# number_input -> user enters numerical value
-L = st.sidebar.number_input("Beam Length L (meters)", min_value=0.1, value=5.0)
+num_loads = st.sidebar.number_input("Number of Loads", 1, 5, 1)
+loads = []
 
-#---Material Properties---
-st.sidebar.markdown("---")
-st.sidebar.subheader("Material Properties")
+for i in range(int(num_loads)):
+    st.sidebar.markdown(f"### Load {i+1}")
 
-# E = modulus of elasticity (material stiffness)
-E = st.sidebar.number_input(
-    "Modulus of Elasticity E (Pa)",
-    min_value=1.0,
-    value=200e9,
-    format="%.2e",
-    help="Material stiffness (e.g., Steel ≈ 200 GPa)"
-)
+    load_type = st.sidebar.selectbox(
+        "Type", ["Point Load", "UDL"], key=f"type_{i}"
+    )
 
-# I = moment of inertia (resistance to bending)
-I = st.sidebar.number_input(
-    "Moment of Inertia I (m⁴)",
-    min_value=1e-9,
-    value=1e-6,
-    format="%.2e",
-    help="Cross-sectional resistance to bending"
-)
-
-#---Loading Input---
-st.sidebar.markdown("---")
-st.sidebar.subheader("Loading")
-
-# IF-Statement:
-if load_type == "Point Load":
-    P = st.sidebar.number_input("Point Load P (Newtons)", min_value=1.0, value=1000.0)
-    a = st.sidebar.number_input("Load Position a (meters from left)", min_value=0.0, max_value=L, value=L/2)
-else:
-    w = st.sidebar.number_input("Uniform Load w (N/m)", min_value=1.0, value=500.0)
-
-# --- VARIABLE EXPLANATION ---
-st.markdown("### 📘 Variable Definitions")
-st.info("""
-- **L (Length):** Total length of the beam  
-- **E (Modulus of Elasticity):** Measures material stiffness  
-- **I (Moment of Inertia):** Resistance of the cross-section to bending  
-- **P (Point Load):** Concentrated force applied at one point  
-- **w (Distributed Load):** Load spread evenly along the beam  
-""")
-
-# --- BEAM DIAGRAM FUNCTION ---
-# Function Definition -> reusable block of code
-# Draws beam, supports, loads, and reactions
-def draw_beam_diagram(beam_type, load_type, L, load, a=None):
-    fig, ax = plt.subplots(figsize=(10,3))
-
-    # --- Beam line ---
-    ax.plot([0, L], [0, 0], linewidth=6)
-
-    # --- SUPPORTS + REACTIONS ---
-    if beam_type == "Simply Supported Beam":
-        # Supports
-        ax.plot(0, 0, marker="^", markersize=12)
-        ax.text(0, -0.5, "Pin", ha='center')
-
-        ax.plot(L, 0, marker="o", markersize=10)
-        ax.text(L, -0.5, "Roller", ha='center')
-
-        # Reaction calculations (static equillibrium)
-        if load_type == "Point Load":
-            R1 = load * (L - a) / L
-            R2 = load * a / L
-        else:  # UDL
-            R1 = R2 = load * L / 2
-
-        # Reaction arrows
-        ax.arrow(0, -0.2, 0, 0.8, head_width=0.2, head_length=0.2, color='green')
-        ax.text(0, 0.9, f"R₁ = {R1:.0f} N", ha='center', color='green')
-
-        ax.arrow(L, -0.2, 0, 0.8, head_width=0.2, head_length=0.2, color='green')
-        ax.text(L, 0.9, f"R₂ = {R2:.0f} N", ha='center', color='green')
-
-    else:  # Cantilever
-        ax.plot(0, 0, marker="s", markersize=12)
-        ax.text(0, -0.5, "Fixed Support", ha='center')
-
-        # Reaction force at wall
-        if load_type == "Point Load":
-            R = load
-        else:
-            R = load * L
-
-        ax.arrow(0, -0.2, 0, 0.8, head_width=0.2, head_length=0.2, color='green')
-        ax.text(0, 0.9, f"R = {R:.0f} N", ha='center', color='green')
-
-    # --- LOADS ---
     if load_type == "Point Load":
-        ax.arrow(a, 1.2, 0, -1, head_width=0.2, head_length=0.3)
-        ax.text(a, 1.5, f"P = {load:.0f} N", ha='center')
+        P = st.sidebar.number_input(f"P{i+1} (N)", key=f"P_{i}")
+        a = st.sidebar.number_input(f"Position {i+1} (m)", 0.0, L, key=f"a_{i}")
+        loads.append(("point", P, a))
+    else:
+        w = st.sidebar.number_input(f"w{i+1} (N/m)", key=f"w_{i}")
+        a = st.sidebar.number_input(f"Start {i+1}", 0.0, L, key=f"start_{i}")
+        b = st.sidebar.number_input(f"End {i+1}", 0.0, L, key=f"end_{i}")
+        loads.append(("udl", w, a, b))
+
+# ==============================
+# EXTERNAL MOMENT
+# ==============================
+st.sidebar.header("🔄 External Moment")
+
+moment_value = st.sidebar.number_input("Moment (N·m)", value=0.0)
+moment_pos = st.sidebar.number_input("Position (m)", 0.0, L, L/2)
+
+# ==============================
+# DISCRETIZATION
+# ==============================
+x = np.linspace(0, L, 800)
+dx = x[1] - x[0]
+
+V = np.zeros_like(x)
+M = np.zeros_like(x)
+
+# ==============================
+# REACTIONS
+# ==============================
+total_force = 0
+total_moment = 0
+
+for load in loads:
+    if load[0] == "point":
+        P, a = load[1], load[2]
+        total_force += P
+        total_moment += P * a
+    else:
+        w, a, b = load[1], load[2], load[3]
+        W = w * (b - a)
+        centroid = (a + b) / 2
+        total_force += W
+        total_moment += W * centroid
+
+if beam_type == "Simply Supported":
+    R2 = total_moment / L
+    R1 = total_force - R2
+    V += R1
+    M += R1 * x
+else:
+    R1 = total_force
+    M_fixed = total_moment
+    V += R1
+    M += R1 * x - M_fixed
+
+# ==============================
+# SUPERPOSITION
+# ==============================
+for load in loads:
+
+    if load[0] == "point":
+        P, a = load[1], load[2]
+        V += np.where(x >= a, -P, 0)
+        M += np.where(x >= a, -P * (x - a), 0)
 
     else:
-        for i in np.linspace(0, L, 12):
-            ax.arrow(i, 1.2, 0, -1, head_width=0.15, head_length=0.2)
-        ax.text(L/2, 1.5, f"w = {load:.0f} N/m", ha='center')
+        w, a, b = load[1], load[2], load[3]
 
-    # --- LENGTH DIMENSION ---
-    ax.annotate(
-        "",
-        xy=(0, -1.2),
-        xytext=(L, -1.2),
-        arrowprops=dict(arrowstyle="<->")
-    )
-    ax.text(L/2, -1.5, f"L = {L:.2f} m", ha='center')
+        for i in range(len(x)):
+            xi = x[i]
 
-    # --- FORMATTING ---
-    ax.set_xlim(-1, L+1)
-    ax.set_ylim(-2, 2)
-    ax.set_title("Beam Free Body Diagram", pad=15)
-    ax.axis('off')
+            if xi < a:
+                continue
+            elif a <= xi <= b:
+                V[i] -= w * (xi - a)
+                M[i] -= w * (xi - a)**2 / 2
+            else:
+                V[i] -= w * (b - a)
+                M[i] -= w * (b - a) * (xi - (a + b)/2)
 
-    return fig
+# External moment
+M += np.where(x >= moment_pos, moment_value, 0)
 
-# --- CALCULATIONS ---
-# IF-ELIF chain selects correct beam equations
-x = np.linspace(0, L, 500)
+# ==============================
+# DEFLECTION
+# ==============================
+curvature = M / (E * I)
+slope = np.cumsum(curvature) * dx
+deflection = np.cumsum(slope) * dx
 
-if beam_type == "Simply Supported Beam" and load_type == "Point Load":
-    R1 = P * (L - a) / L
-    # Vectorized calculations (applies equation across all x)
-    V = np.where(x < a, R1, R1 - P)
-    M = np.where(x < a, R1 * x, R1 * x - P * (x - a))
-    delta_max = (P * a * (L**2 - a**2)**1.5) / (9 * np.sqrt(3) * E * I * L)
+if beam_type == "Simply Supported":
+    deflection -= np.linspace(deflection[0], deflection[-1], len(deflection))
+else:
+    deflection -= deflection[0]
+    slope -= slope[0]
+    deflection = np.cumsum(slope) * dx
 
-elif beam_type == "Simply Supported Beam" and load_type == "Uniformly Distributed Load (UDL)":
-    V = w * (L/2 - x)
-    M = (w/2) * (L*x - x**2)
-    delta_max = (5 * w * L**4) / (384 * E * I)
-
-elif beam_type == "Cantilever Beam" and load_type == "Point Load":
-    V = np.where(x < L, P, 0)
-    M = P * (L - x)
-    delta_max = (P * L**3) / (3 * E * I)
-
-elif beam_type == "Cantilever Beam" and load_type == "Uniformly Distributed Load (UDL)":
-    V = w * (L - x)
-    M = (w/2) * (L - x)**2
-    delta_max = (w * L**4) / (8 * E * I)
-
-# --- FIND MAX VALUES ---
-# np.max -> finds largest magnitude
-# np.argmax -> finds index location
-max_shear = np.max(np.abs(V))
-max_shear_index = np.argmax(np.abs(V))
-
-max_moment = np.max(np.abs(M))
-max_moment_index = np.argmax(np.abs(M))
-
-# --- RESULTS ---
+# ==============================
+# RESULTS
+# ==============================
 st.markdown("## 📊 Results")
 
 col1, col2, col3 = st.columns(3)
 
-with col1:
-    st.metric("Max Deflection (m)", f"{delta_max:.3e}")
+col1.metric("Max Shear (N)", f"{np.max(np.abs(V)):.2f}")
+col2.metric("Max Moment (N·m)", f"{np.max(np.abs(M)):.2f}")
+col3.metric("Max Deflection (m)", f"{np.max(np.abs(deflection)):.6e}")
 
-with col2:
-    st.metric("Max Shear (N)", f"{max_shear:.2f}")
+# ==============================
+# POLISHED FBD
+# ==============================
+fig_fbd, ax = plt.subplots(figsize=(10,3))
 
-with col3:
-    st.metric("Max Moment (N·m)", f"{max_moment:.2f}")
+# Beam
+ax.plot([0, L], [0, 0], linewidth=6)
 
-# --- BEAM DIAGRAM ---
-st.markdown("## 🏗️ Beam Diagram")
-
-if load_type == "Point Load":
-    fig_beam = draw_beam_diagram(beam_type, load_type, L, P, a)
+# Supports
+if beam_type == "Simply Supported":
+    ax.plot(0, 0, marker="^", markersize=12)
+    ax.plot(L, 0, marker="o", markersize=10)
 else:
-    fig_beam = draw_beam_diagram(beam_type, load_type, L, w)
+    ax.plot(0, 0, marker="s", markersize=12)
 
-st.pyplot(fig_beam)
+# Reactions
+ax.arrow(0, -0.2, 0, 1.2)
+ax.text(0, 1.5, f"R1={R1:.0f}", ha='center')
 
-# --- PLOTS ---
-st.markdown("## 📈 Shear Force & Bending Moment Diagrams")
+if beam_type == "Simply Supported":
+    ax.arrow(L, -0.2, 0, 1.2)
+    ax.text(L, 1.5, f"R2={R2:.0f}", ha='center')
 
-fig, ax = plt.subplots(2, 1, figsize=(10, 8))
+# Loads (OFFSET ABOVE BEAM)
+for load in loads:
+    if load[0] == "point":
+        _, P, a = load
+        ax.arrow(a, 2.0, 0, -1.6)
+        ax.text(a, 2.2, f"P={P:.0f}", ha='center')
+    else:
+        _, w, a, b = load
+        for xi in np.linspace(a, b, 10):
+            ax.arrow(xi, 2.0, 0, -1.6)
+        ax.text((a+b)/2, 2.2, f"w={w:.0f}", ha='center')
 
-# SHEAR
+# External moment
+theta = np.linspace(0, np.pi, 50)
+r = 0.5
+ax.plot(moment_pos + r*np.cos(theta), 1.2 + r*np.sin(theta))
+ax.text(moment_pos, 2.0, f"M={moment_value:.0f}", ha='center')
+
+ax.set_xlim(-1, L+1)
+ax.set_ylim(-1, 3)
+ax.axis('off')
+
+st.pyplot(fig_fbd)
+
+# ==============================
+# DIAGRAMS WITH MAX HIGHLIGHTING
+# ==============================
+st.markdown("## 📈 Diagrams")
+
+fig, ax = plt.subplots(3, 1, figsize=(10,10))
+
+# --- FIND MAX INDICES ---
+max_shear_idx = np.argmax(np.abs(V))
+max_moment_idx = np.argmax(np.abs(M))
+max_deflection_idx = np.argmax(np.abs(deflection))
+
+
+# ==============================
+# SHEAR FORCE DIAGRAM
+# ==============================
 ax[0].plot(x, V)
-ax[0].scatter(x[max_shear_index], V[max_shear_index])
+ax[0].scatter(x[max_shear_idx], V[max_shear_idx])
 
-# Dynamic offset
-y_offset_shear = -30 if V[max_shear_index] > 0 else 30
+y_offset_shear = -30 if V[max_shear_idx] > 0 else 30
 
 ax[0].annotate(
-    f"Max = {max_shear:.2f} N",
-    (x[max_shear_index], V[max_shear_index]),
+    f"Max = {np.max(np.abs(V)):.2f} N",
+    (x[max_shear_idx], V[max_shear_idx]),
     textcoords="offset points",
     xytext=(10, y_offset_shear),
-    ha='left',
     bbox=dict(boxstyle="round,pad=0.3")
 )
+
 ax[0].set_title("Shear Force Diagram", pad=15)
 ax[0].set_xlabel("Position (m)")
 ax[0].set_ylabel("Shear (N)")
 ax[0].grid()
 
-# MOMENT
-ax[1].plot(x, M)
-ax[1].scatter(x[max_moment_index], M[max_moment_index])
 
-# Dynamic offset to avoid overlap with title
-y_offset = -30 if M[max_moment_index] > 0 else 30
+# ==============================
+# BENDING MOMENT DIAGRAM
+# ==============================
+ax[1].plot(x, M)
+ax[1].scatter(x[max_moment_idx], M[max_moment_idx])
+
+y_offset_moment = -30 if M[max_moment_idx] > 0 else 30
 
 ax[1].annotate(
-    f"Max = {max_moment:.2f} N·m",
-    (x[max_moment_index], M[max_moment_index]),
+    f"Max = {np.max(np.abs(M)):.2f} N·m",
+    (x[max_moment_idx], M[max_moment_idx]),
     textcoords="offset points",
-    xytext=(10, y_offset),
-    ha='left',
+    xytext=(10, y_offset_moment),
     bbox=dict(boxstyle="round,pad=0.3")
 )
+
 ax[1].set_title("Bending Moment Diagram", pad=15)
 ax[1].set_xlabel("Position (m)")
 ax[1].set_ylabel("Moment (N·m)")
 ax[1].grid()
 
+
+# ==============================
+# DEFLECTION DIAGRAM
+# ==============================
+ax[2].plot(x, deflection)
+ax[2].scatter(x[max_deflection_idx], deflection[max_deflection_idx])
+
+y_offset_defl = -30 if deflection[max_deflection_idx] > 0 else 30
+
+ax[2].annotate(
+    f"Max = {np.max(np.abs(deflection)):.6e} m",
+    (x[max_deflection_idx], deflection[max_deflection_idx]),
+    textcoords="offset points",
+    xytext=(10, y_offset_defl),
+    bbox=dict(boxstyle="round,pad=0.3")
+)
+
+ax[2].set_title("Deflection Diagram", pad=15)
+ax[2].set_xlabel("Position (m)")
+ax[2].set_ylabel("Deflection (m)")
+ax[2].grid()
+
+
 plt.tight_layout(pad=3.0)
 st.pyplot(fig)
-
-# --- FOOTER ---
-st.markdown("---")
-st.caption("Developed for Civil Engineering Beam Analysis | Streamlit App")
