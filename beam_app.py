@@ -109,7 +109,7 @@ for load in loads:
 
 if beam_type == "Simply Supported":
     # ✅ Correct sign for external moment
-    R2 = (total_moment - moment_value) / L
+    R2 = (total_moment + moment_value) / L
     R1 = total_force - R2
 
     V += R1
