@@ -231,7 +231,7 @@ ax.axis('off')
 st.pyplot(fig_fbd)
 
 # ==============================
-# DIAGRAMS WITH MAX HIGHLIGHTING
+# DIAGRAMS WITH MAX + LOCATION
 # ==============================
 st.markdown("## 📈 Analysis Diagrams")
 
@@ -242,18 +242,22 @@ max_shear_idx = np.argmax(np.abs(V))
 max_moment_idx = np.argmax(np.abs(M))
 max_deflection_idx = np.argmax(np.abs(deflection))
 
+x_shear = x[max_shear_idx]
+x_moment = x[max_moment_idx]
+x_defl = x[max_deflection_idx]
+
 
 # ==============================
 # SHEAR
 # ==============================
 ax[0].plot(x, V)
-ax[0].scatter(x[max_shear_idx], V[max_shear_idx])
+ax[0].scatter(x_shear, V[max_shear_idx])
 
 y_offset_shear = -30 if V[max_shear_idx] > 0 else 30
 
 ax[0].annotate(
-    f"Max = {np.max(np.abs(V)):.2f} N",
-    (x[max_shear_idx], V[max_shear_idx]),
+    f"Max = {np.max(np.abs(V)):.2f} N\nx = {x_shear:.2f} m",
+    (x_shear, V[max_shear_idx]),
     textcoords="offset points",
     xytext=(10, y_offset_shear),
     bbox=dict(boxstyle="round,pad=0.3")
@@ -269,13 +273,13 @@ ax[0].grid()
 # MOMENT
 # ==============================
 ax[1].plot(x, M)
-ax[1].scatter(x[max_moment_idx], M[max_moment_idx])
+ax[1].scatter(x_moment, M[max_moment_idx])
 
 y_offset_moment = -30 if M[max_moment_idx] > 0 else 30
 
 ax[1].annotate(
-    f"Max = {np.max(np.abs(M)):.2f} N·m",
-    (x[max_moment_idx], M[max_moment_idx]),
+    f"Max = {np.max(np.abs(M)):.2f} N·m\nx = {x_moment:.2f} m",
+    (x_moment, M[max_moment_idx]),
     textcoords="offset points",
     xytext=(10, y_offset_moment),
     bbox=dict(boxstyle="round,pad=0.3")
@@ -291,13 +295,13 @@ ax[1].grid()
 # DEFLECTION
 # ==============================
 ax[2].plot(x, deflection)
-ax[2].scatter(x[max_deflection_idx], deflection[max_deflection_idx])
+ax[2].scatter(x_defl, deflection[max_deflection_idx])
 
 y_offset_defl = -30 if deflection[max_deflection_idx] > 0 else 30
 
 ax[2].annotate(
-    f"Max = {np.max(np.abs(deflection)):.6e} m",
-    (x[max_deflection_idx], deflection[max_deflection_idx]),
+    f"Max = {np.max(np.abs(deflection)):.6e} m\nx = {x_defl:.2f} m",
+    (x_defl, deflection[max_deflection_idx]),
     textcoords="offset points",
     xytext=(10, y_offset_defl),
     bbox=dict(boxstyle="round,pad=0.3")
