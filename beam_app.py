@@ -7,8 +7,6 @@ import matplotlib.pyplot as plt
 # ==============================
 st.set_page_config(page_title="Beam Analysis Tool", layout="wide")
 
-st.title("🏗️ Beam Analysis Tool")
-
 st.markdown("""
 <style>
 .block-container {
