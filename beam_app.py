@@ -115,10 +115,10 @@ for load in loads:
         total_moment += W * centroid
 
 if beam_type == "Simply Supported":
-    R2 = total_moment / L
+
+    # Include external moment directly in equilibrium
+    R2 = (total_moment + moment_value) / L
     R1 = total_force - R2
-    V += R1
-    M += R1 * x
 else:
     R1 = total_force
     M_fixed = total_moment
