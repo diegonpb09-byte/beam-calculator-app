@@ -126,6 +126,12 @@ else:
     M += R1 * x - M_fixed
 
 # ==============================
+# INCLUDE EXTERNAL MOMENT IN EQUILIBRIUM
+# ==============================
+if beam_type == "Simply Supported":
+    total_moment += moment_value
+    
+# ==============================
 # SUPERPOSITION
 # ==============================
 for load in loads:
@@ -260,13 +266,14 @@ if moment_value != 0:
         ha='center'
     )
 # ==============================
-# BEAM SCALE (TICKS + LABELS)
+# BEAM SCALE (EVERY 1 METER)
 # ==============================
 
-# Choose number of ticks (adjust if you want more/less)
-num_ticks = 6
+tick_positions = np.arange(0, L + 1, 1)
 
-tick_positions = np.linspace(0, L, num_ticks)
+for pos in tick_positions:
+    ax.plot([pos, pos], [0, -0.15], color='black', linewidth=1)
+    ax.text(pos, -0.35, f"{int(pos)}", ha='center', fontsize=8)
 
 for pos in tick_positions:
     # Draw small vertical tick
