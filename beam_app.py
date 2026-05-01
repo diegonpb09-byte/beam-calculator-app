@@ -259,6 +259,21 @@ if moment_value != 0:
         f"M = {moment_value:.0f} N·m",
         ha='center'
     )
+# ==============================
+# BEAM SCALE (TICKS + LABELS)
+# ==============================
+
+# Choose number of ticks (adjust if you want more/less)
+num_ticks = 6
+
+tick_positions = np.linspace(0, L, num_ticks)
+
+for pos in tick_positions:
+    # Draw small vertical tick
+    ax.plot([pos, pos], [0, -0.15], color='black', linewidth=1)
+
+    # Add label below beam
+    ax.text(pos, -0.35, f"{pos:.1f}", ha='center', fontsize=8)
 
 # --- FORMATTING ---
 ax.set_xlim(-0.5, L + 0.5)
