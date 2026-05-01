@@ -190,22 +190,22 @@ ax.plot(0, 0, marker="^", markersize=12)
 ax.plot(L, 0, marker="o", markersize=10)
 
 ax.arrow(0, -0.1, 0, 0.8, head_width=0.2, head_length=0.2)
-ax.text(0, 1.0, f"R1={R1:.0f}", ha='center')
+ax.text(0, 1.0, f"R1={R1:.0f} N", ha='center')
 
 ax.arrow(L, -0.1, 0, 0.8, head_width=0.2, head_length=0.2)
-ax.text(L, 1.0, f"R2={R2:.0f}", ha='center')
+ax.text(L, 1.0, f"R2={R2:.0f} N", ha='center')
 
 # Loads
 for load in loads:
     if load[0] == "point":
         _, P, a = load
         ax.arrow(a, 1.5, 0, -1.0, head_width=0.2, head_length=0.2)
-        ax.text(a, 1.7, f"P={P:.0f}", ha='center')
+        ax.text(a, 1.7, f"P={P:.0f} N", ha='center')
     else:
         _, w, a, b = load
         for xi in np.linspace(a, b, 8):
             ax.arrow(xi, 1.5, 0, -1.0, head_width=0.15, head_length=0.15)
-        ax.text((a+b)/2, 1.7, f"w={w:.0f}", ha='center')
+        ax.text((a+b)/2, 1.7, f"w={w:.0f} N/m", ha='center')
 
 # Moment
 if moment_value != 0:
@@ -217,7 +217,7 @@ if moment_value != 0:
             y_center + r*np.sin(theta))
 
     ax.text(moment_pos, y_center - 0.5,
-            f"M={moment_value:.0f}", ha='center')
+            f"M = {moment_value:.0f} N·m", ha='center')
 
 # Beam scale
 for pos in np.arange(0, L+1, 1):
@@ -231,25 +231,84 @@ ax.axis('off')
 st.pyplot(fig_fbd)
 
 # ==============================
-# DIAGRAMS
+# DIAGRAMS WITH MAX HIGHLIGHTING
 # ==============================
 st.markdown("## 📈 Analysis Diagrams")
 
-fig, ax = plt.subplots(3,1, figsize=(10,10))
+fig, ax = plt.subplots(3, 1, figsize=(10,10))
 
+# --- FIND MAX INDICES ---
+max_shear_idx = np.argmax(np.abs(V))
+max_moment_idx = np.argmax(np.abs(M))
+max_deflection_idx = np.argmax(np.abs(deflection))
+
+
+# ==============================
+# SHEAR
+# ==============================
 ax[0].plot(x, V)
-ax[0].set_title("Shear Force")
+ax[0].scatter(x[max_shear_idx], V[max_shear_idx])
+
+y_offset_shear = -30 if V[max_shear_idx] > 0 else 30
+
+ax[0].annotate(
+    f"Max = {np.max(np.abs(V)):.2f} N",
+    (x[max_shear_idx], V[max_shear_idx]),
+    textcoords="offset points",
+    xytext=(10, y_offset_shear),
+    bbox=dict(boxstyle="round,pad=0.3")
+)
+
+ax[0].set_title("Shear Force Diagram")
+ax[0].set_xlabel("Position (m)")
+ax[0].set_ylabel("Shear (N)")
 ax[0].grid()
 
+
+# ==============================
+# MOMENT
+# ==============================
 ax[1].plot(x, M)
-ax[1].set_title("Bending Moment")
+ax[1].scatter(x[max_moment_idx], M[max_moment_idx])
+
+y_offset_moment = -30 if M[max_moment_idx] > 0 else 30
+
+ax[1].annotate(
+    f"Max = {np.max(np.abs(M)):.2f} N·m",
+    (x[max_moment_idx], M[max_moment_idx]),
+    textcoords="offset points",
+    xytext=(10, y_offset_moment),
+    bbox=dict(boxstyle="round,pad=0.3")
+)
+
+ax[1].set_title("Bending Moment Diagram")
+ax[1].set_xlabel("Position (m)")
+ax[1].set_ylabel("Moment (N·m)")
 ax[1].grid()
 
+
+# ==============================
+# DEFLECTION
+# ==============================
 ax[2].plot(x, deflection)
-ax[2].set_title("Deflection")
+ax[2].scatter(x[max_deflection_idx], deflection[max_deflection_idx])
+
+y_offset_defl = -30 if deflection[max_deflection_idx] > 0 else 30
+
+ax[2].annotate(
+    f"Max = {np.max(np.abs(deflection)):.6e} m",
+    (x[max_deflection_idx], deflection[max_deflection_idx]),
+    textcoords="offset points",
+    xytext=(10, y_offset_defl),
+    bbox=dict(boxstyle="round,pad=0.3")
+)
+
+ax[2].set_title("Deflection Diagram")
+ax[2].set_xlabel("Position (m)")
+ax[2].set_ylabel("Deflection (m)")
 ax[2].grid()
 
-plt.tight_layout()
+plt.tight_layout(pad=3.0)
 st.pyplot(fig)
 
 st.markdown("---")
