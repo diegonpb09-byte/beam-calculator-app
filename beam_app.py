@@ -242,13 +242,6 @@ col1.metric("Max Shear (N)", f"{np.max(np.abs(V)):.2f}")
 col2.metric("Max Moment (N·m)", f"{np.max(np.abs(M)):.2f}")
 col3.metric("Max Deflection (m)", f"{np.max(np.abs(deflection)):.6e}")
 
-with st.expander("🔍 View Detailed Inputs"):
-    st.write("Beam Length (m):", L)
-    st.write("Elastic Modulus (Pa):", E)
-    st.write("Moment of Inertia (m⁴):", I)
-    st.write("Loads:", loads)
-    st.write("External Moment:", moment_value)
-
 # ==============================
 # FBD
 # ==============================
