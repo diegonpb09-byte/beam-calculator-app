@@ -57,52 +57,91 @@ st.sidebar.header("📦 Loads")
 num_loads = st.sidebar.number_input("Number of Loads", 1, 5, 1)
 
 loads = []
+
 for i in range(int(num_loads)):
+
     st.sidebar.markdown(f"### Load {i+1}")
 
-    load_type = st.sidebar.selectbox("Type", ["Point Load", "UDL"], key=f"type_{i}")
-
-if load_type == "Point Load":
-
-    P = st.sidebar.number_input(f"P{i+1} (N)", key=f"P_{i}")
-
-    a = st.sidebar.number_input(
-        f"Position {i+1} (m)",
-        0.0, L,
-        key=f"a_{i}"
+    load_type = st.sidebar.selectbox(
+        "Type",
+        ["Point Load", "UDL"],
+        key=f"type_{i}"
     )
 
-    direction = st.sidebar.selectbox(
-        f"Direction {i+1}",
-        ["Vertical Down", "Vertical Up", "Angled"],
-        key=f"dir_{i}"
-    )
+    # ==============================
+    # POINT LOAD
+    # ==============================
+    if load_type == "Point Load":
 
-    angle_deg = 270  # default vertical down
-
-    if direction == "Vertical Down":
-        Py = -P
-
-    elif direction == "Vertical Up":
-        Py = P
-
-    else:
-        angle_deg = st.sidebar.slider(
-            f"Angle {i+1} (degrees)",
-            0, 360, 270,
-            key=f"angle_{i}"
+        P = st.sidebar.number_input(
+            f"P{i+1} (N)",
+            key=f"P_{i}"
         )
 
-        angle_rad = np.radians(angle_deg)
+        a = st.sidebar.number_input(
+            f"Position {i+1} (m)",
+            0.0, L,
+            key=f"a_{i}"
+        )
 
-        # Vertical component only
-        Py = P * np.sin(angle_rad)
+        direction = st.sidebar.selectbox(
+            f"Direction {i+1}",
+            ["Vertical Down", "Vertical Up", "Angled"],
+            key=f"dir_{i}"
+        )
 
-    loads.append(("point", Py, a, direction, angle_deg, P))
+        angle_deg = 270
+
+        if direction == "Vertical Down":
+            Py = -P
+
+        elif direction == "Vertical Up":
+            Py = P
+
+        else:
+
+            angle_deg = st.sidebar.slider(
+                f"Angle {i+1} (degrees)",
+                0, 360, 270,
+                key=f"angle_{i}"
+            )
+
+            angle_rad = np.radians(angle_deg)
+
+            # Vertical component only
+            Py = P * np.sin(angle_rad)
+
+        loads.append((
+            "point",
+            Py,
+            a,
+            direction,
+            angle_deg,
+            P
+        ))
+
+    # ==============================
+    # UDL
+    # ==============================
     else:
-        w = st.sidebar.number_input(f"w{i+1} (N/m)", key=f"w_{i}")
-        a = st.sidebar.number_input(f"Start {i+1} (m)", 0.0, L, key=f"start_{i}")
-        b = st.sidebar.number_input(f"End {i+1} (m)", 0.0, L, key=f"end_{i}")
+
+        w = st.sidebar.number_input(
+            f"w{i+1} (N/m)",
+            key=f"w_{i}"
+        )
+
+        a = st.sidebar.number_input(
+            f"Start {i+1} (m)",
+            0.0, L,
+            key=f"start_{i}"
+        )
+
+        b = st.sidebar.number_input(
+            f"End {i+1} (m)",
+            0.0, L,
+            key=f"end_{i}"
+        )
+
         loads.append(("udl", w, a, b))
 
 # ==============================
@@ -230,60 +269,91 @@ ax.text(L, 1.0, f"R2={R2:.0f} N", ha='center')
 
 # Loads
 for load in loads:
+
+    # ==============================
+    # POINT LOADS
+    # ==============================
     if load[0] == "point":
+
         _, Py, a, direction, angle_deg, Pmag = load
 
-# Arrow length
-arrow_len = 1.0
+        arrow_len = 1.0
 
-if direction == "Vertical Down":
+        # ------------------------------
+        # Vertical Down
+        # ------------------------------
+        if direction == "Vertical Down":
 
-    ax.arrow(
-        a, 1.5,
-        0, -arrow_len,
-        head_width=0.2,
-        head_length=0.2,
-        length_includes_head=True
-    )
+            ax.arrow(
+                a, 1.5,
+                0, -arrow_len,
+                head_width=0.2,
+                head_length=0.2,
+                length_includes_head=True
+            )
 
-elif direction == "Vertical Up":
+        # ------------------------------
+        # Vertical Up
+        # ------------------------------
+        elif direction == "Vertical Up":
 
-    ax.arrow(
-        a, 0.5,
-        0, arrow_len,
-        head_width=0.2,
-        head_length=0.2,
-        length_includes_head=True
-    )
+            ax.arrow(
+                a, 0.5,
+                0, arrow_len,
+                head_width=0.2,
+                head_length=0.2,
+                length_includes_head=True
+            )
 
-else:
+        # ------------------------------
+        # Angled Load
+        # ------------------------------
+        else:
 
-    angle_rad = np.radians(angle_deg)
+            angle_rad = np.radians(angle_deg)
 
-    dx_arrow = 0.8 * np.cos(angle_rad)
-    dy_arrow = 0.8 * np.sin(angle_rad)
+            dx_arrow = 0.8 * np.cos(angle_rad)
+            dy_arrow = 0.8 * np.sin(angle_rad)
 
-    ax.arrow(
-        a - dx_arrow,
-        0.8 - dy_arrow,
-        dx_arrow,
-        dy_arrow,
-        head_width=0.15,
-        head_length=0.15,
-        length_includes_head=True
-    )
+            ax.arrow(
+                a - dx_arrow,
+                0.8 - dy_arrow,
+                dx_arrow,
+                dy_arrow,
+                head_width=0.15,
+                head_length=0.15,
+                length_includes_head=True
+            )
 
-ax.text(
-    a,
-    1.7,
-    f"P = {Pmag:.0f} N",
-    ha='center'
-)
+        ax.text(
+            a,
+            1.7,
+            f"P = {Pmag:.0f} N",
+            ha='center'
+        )
+
+    # ==============================
+    # UDL
+    # ==============================
     else:
+
         _, w, a, b = load
+
         for xi in np.linspace(a, b, 8):
-            ax.arrow(xi, 1.5, 0, -1.0, head_width=0.15, head_length=0.15)
-        ax.text((a+b)/2, 1.7, f"w={w:.0f} N/m", ha='center')
+
+            ax.arrow(
+                xi, 1.5,
+                0, -1.0,
+                head_width=0.15,
+                head_length=0.15
+            )
+
+        ax.text(
+            (a+b)/2,
+            1.7,
+            f"w={w:.0f} N/m",
+            ha='center'
+        )
 
 # Moment
 if moment_value != 0:
