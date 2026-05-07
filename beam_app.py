@@ -62,10 +62,43 @@ for i in range(int(num_loads)):
 
     load_type = st.sidebar.selectbox("Type", ["Point Load", "UDL"], key=f"type_{i}")
 
-    if load_type == "Point Load":
-        P = st.sidebar.number_input(f"P{i+1} (N)", key=f"P_{i}")
-        a = st.sidebar.number_input(f"Position {i+1} (m)", 0.0, L, key=f"a_{i}")
-        loads.append(("point", P, a))
+if load_type == "Point Load":
+
+    P = st.sidebar.number_input(f"P{i+1} (N)", key=f"P_{i}")
+
+    a = st.sidebar.number_input(
+        f"Position {i+1} (m)",
+        0.0, L,
+        key=f"a_{i}"
+    )
+
+    direction = st.sidebar.selectbox(
+        f"Direction {i+1}",
+        ["Vertical Down", "Vertical Up", "Angled"],
+        key=f"dir_{i}"
+    )
+
+    angle_deg = 270  # default vertical down
+
+    if direction == "Vertical Down":
+        Py = -P
+
+    elif direction == "Vertical Up":
+        Py = P
+
+    else:
+        angle_deg = st.sidebar.slider(
+            f"Angle {i+1} (degrees)",
+            0, 360, 270,
+            key=f"angle_{i}"
+        )
+
+        angle_rad = np.radians(angle_deg)
+
+        # Vertical component only
+        Py = P * np.sin(angle_rad)
+
+    loads.append(("point", Py, a, direction, angle_deg, P))
     else:
         w = st.sidebar.number_input(f"w{i+1} (N/m)", key=f"w_{i}")
         a = st.sidebar.number_input(f"Start {i+1} (m)", 0.0, L, key=f"start_{i}")
@@ -198,9 +231,54 @@ ax.text(L, 1.0, f"R2={R2:.0f} N", ha='center')
 # Loads
 for load in loads:
     if load[0] == "point":
-        _, P, a = load
-        ax.arrow(a, 1.5, 0, -1.0, head_width=0.2, head_length=0.2)
-        ax.text(a, 1.7, f"P={P:.0f} N", ha='center')
+        _, Py, a, direction, angle_deg, Pmag = load
+
+# Arrow length
+arrow_len = 1.0
+
+if direction == "Vertical Down":
+
+    ax.arrow(
+        a, 1.5,
+        0, -arrow_len,
+        head_width=0.2,
+        head_length=0.2,
+        length_includes_head=True
+    )
+
+elif direction == "Vertical Up":
+
+    ax.arrow(
+        a, 0.5,
+        0, arrow_len,
+        head_width=0.2,
+        head_length=0.2,
+        length_includes_head=True
+    )
+
+else:
+
+    angle_rad = np.radians(angle_deg)
+
+    dx_arrow = 0.8 * np.cos(angle_rad)
+    dy_arrow = 0.8 * np.sin(angle_rad)
+
+    ax.arrow(
+        a - dx_arrow,
+        0.8 - dy_arrow,
+        dx_arrow,
+        dy_arrow,
+        head_width=0.15,
+        head_length=0.15,
+        length_includes_head=True
+    )
+
+ax.text(
+    a,
+    1.7,
+    f"P = {Pmag:.0f} N",
+    ha='center'
+)
     else:
         _, w, a, b = load
         for xi in np.linspace(a, b, 8):
